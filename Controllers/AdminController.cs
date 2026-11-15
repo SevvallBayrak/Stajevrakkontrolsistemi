@@ -200,7 +200,7 @@ public class AdminController : AppController
         return File(bytes, "text/csv", "veri_seti_sablonu.csv");
     }
 
-    // ---------------------------------------------------------------- Kullanıcılar & loglar
+    //Kullanıcılar & loglar
     [HttpGet("kullanicilar")]
     public IActionResult Users() =>
         View(new UsersVm { Users = Services.Users.ListWithStats(), Now = DateTime.Now });

@@ -6,7 +6,7 @@ using StajEvrak.Data;
 namespace StajEvrak.Core;
 
 /*
- * Alan (domain) nesneleri — NYP prensipleri:
+ * domain nesneleri — NYP prensipleri:
  *  - Soyutlama      : User soyut sınıftır; her rol kendi davranışını tanımlar.
  *  - Kalıtım        : Student ve Admin, User sınıfından türetilir.
  *  - Çok biçimlilik : Home, CanModify(), CanView(), MenuItems her rolde farklı çalışır.

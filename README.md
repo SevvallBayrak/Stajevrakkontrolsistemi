@@ -11,7 +11,7 @@ Programlama Laboratuvarı III · 2026-2027 Güz · Ek-16 belgesini yükleme, oku
    - Kurulumu kontrol etmek için Terminal'i yeniden açıp `dotnet --version` yazın. `10.x.x` görmelisiniz.
 2. Proje klasörüne girip çalıştırın:
    ```bash
-   cd ~/Downloads/StajEvrak
+   cd <proje-klasörü>
    dotnet run
    ```
    İlk çalıştırmada NuGet paketleri otomatik indirilir (internet gerekir).
@@ -21,18 +21,16 @@ Windows'ta kurulum aynıdır; .NET 10 SDK'yı kurup proje klasöründe `dotnet r
 
 ## Veritabanı ve migration (Entity Framework Core)
 
-Tablolar `Data/AppDbContext.cs` içinde tanımlıdır. Şema migration ile oluşturulur:
+Tablolar `Data/AppDbContext.cs` içinde tanımlıdır. Şema, `Migrations/` klasöründeki `IlkKurulum` migration'ı ile oluşturulur. Uygulama açılırken `Migrate()` çağrılır ve bekleyen migration'lar otomatik uygulanır; ayrıca bir komut çalıştırmak gerekmez.
+
+Modelde değişiklik yapıldığında yeni bir migration eklenir:
 
 ```bash
 dotnet tool install --global dotnet-ef        # bir kez (EF komut aracı)
 export PATH="$PATH:$HOME/.dotnet/tools"       # Mac'te 'dotnet ef' bulunamazsa
-dotnet ef migrations add IlkKurulum           # Migrations/ klasörünü oluşturur
-dotnet run                                    # açılışta Migrate() ile tablolar oluşturulur
+dotnet ef migrations add AlanEklendi          # yeni migration
+dotnet run                                    # açılışta otomatik uygulanır
 ```
-
-Modelde değişiklik yaptığınızda yeni bir migration ekleyin (`dotnet ef migrations add AlanEklendi`); uygulama açılırken otomatik uygulanır. Projede hiç migration yoksa uygulama tabloları `EnsureCreated()` ile oluşturur ve konsola uyarı yazar.
-
-> Eski (EF öncesi) sürümden kalan `App_Data` klasörü varsa silin; aksi hâlde migration "tablo zaten var" hatası verir.
 
 İlk çalıştırmada veritabanı (`App_Data/staj.db`) ve varsayılan admin hesabı oluşturulur:
 
@@ -42,21 +40,16 @@ Modelde değişiklik yaptığınızda yeni bir migration ekleyin (`dotnet ef mig
 
 Öğrenciler giriş sayfasındaki **"Öğrenci hesabı oluşturun"** bağlantısıyla hesaplarını kendileri açar ve şifrelerini kendileri belirler (soru-cevap #4).
 
-## Hızlı deneme senaryosu (elle) (`sample_data/` klasörü)
+## Hızlı deneme senaryosu
 
-1. `admin` ile giriş yapın → **Veri Seti** → `ornek_veri_seti.xlsx` (veya `.csv`) dosyasını yükleyin.
-2. Çıkış yapıp öğrenci hesabı açın: Ad Soyad **Ayşe Yılmaz**, öğrenci no `230201001`, TC no `20433218148`.
-3. **Yeni Başvuru** açın; kimlik bilgileri ve veri setindeki bilgiler forma otomatik gelir. Kalan alanları şöyle doldurun:
-   - Öğretim yılı `2025-2026`, yarıyıl `Bahar`
-   - Staj 06.07.2026 – 14.08.2026, `29` gün
-   - Firma `Kırmızı Yazılım A.Ş.`, adres `Sanayi Mah., Teknopark Cad., No:1, D:12, İzmit/Kocaeli`
-   - Firma telefonu `+90 262 555 10 20`, e-posta `ik@kirmiziyazilim.com.tr`
-   - Mühendis sayısı `7`, yetkili `Hakan Yıldız`, unvan `İK Müdürü`
-4. **Evrak Yükle** ile şu dosyaları deneyin:
-   - `reddedilecek_dosya.txt` → pop-up ile reddedilir.
-   - `sahte_pdf.pdf` → içerik imzası uyuşmadığı için sunucuda reddedilir.
-   - `ornek_ek16_hatali.docx` → **Hatalı / Eksik** olur. Raporda telefon ve gün sayısı uyuşmazlığı ile boş alanlar görünür.
-   - `ornek_ek16_uyumlu.docx` veya `ornek_ek16_uyumlu.pdf` → **Onaylandı** (teslime hazır).
+1. `admin` ile giriş yapın → **Veri Seti** → öğrenci bilgilerini içeren `.xlsx` veya `.csv` dosyasını yükleyin.
+2. Çıkış yapıp giriş sayfasından öğrenci hesabı açın. Ad soyad, öğrenci no ve TC kimlik no veri setindeki bir kayıtla aynı olmalıdır.
+3. **Yeni Başvuru** açın. Kimlik bilgileri ve veri setindeki bilgiler forma otomatik gelir; staj ve işyeri bilgilerini doldurup kaydedin.
+4. **Evrak Yükle** ile deneyin:
+   - İzin verilmeyen uzantıdaki bir dosya (ör. `.txt`) → pop-up ile reddedilir.
+   - Uzantısı `.pdf` olup içeriği PDF olmayan bir dosya → içerik imzası uyuşmadığı için sunucuda reddedilir.
+   - Bilgileri formla uyuşmayan bir Ek-16 → **Hatalı / Eksik** olur; raporda uyuşmayan ve boş alanlar listelenir.
+   - Bilgileri formla aynı olan bir Ek-16 (`.docx` veya `.pdf`) → **Onaylandı** (teslime hazır).
 5. Admin olarak başvuru detayına girip **Tamamlandı yap** deyin. Öğrenci artık belgeyi düzenleyemez ve silemez; admin hâlâ düzenleyip silebilir.
 
 ## Vize isterleri → karşılığı
@@ -93,8 +86,6 @@ Modelde değişiklik yaptığınızda yeni bir migration ekleyin (`dotnet ef mig
   - `ParserFactory.ForExtension(ext).Parse()` dosya türüne göre doğru okuyucuyu çağırır.
   - `pipeline.Run()` her `validator.Validate()` metodunu aynı arayüzden çağırır.
 
-Sınıf, ER, akış, durum ve kullanım durumu diyagramları `docs/diyagramlar.md` dosyasında Mermaid formatındadır. https://mermaid.live adresinden PNG olarak alabilirsiniz.
-
 ## Proje yapısı
 
 ```
@@ -103,7 +94,7 @@ appsettings.json           Ayarlar (port, kilit süresi, varsayılan admin)
 Data/
   Entities.cs              EF Core varlık sınıfları (tablolar)
   AppDbContext.cs          DbContext, ilişkiler, snake_case sütun adları, tasarım zamanı fabrikası
-Migrations/                'dotnet ef migrations add' ile oluşturulur
+Migrations/                EF Core migration'ları (IlkKurulum)
 Core/
   Enums.cs                 Role, DocumentStatus (statü akışı)
   Models.cs                User/Student/Admin, Application, Document, DatasetRecord
@@ -120,8 +111,6 @@ Web/                       Middleware, yetki filtresi, bildirimler, view modelle
 Controllers/               Auth, Student, Admin
 Views/                     Razor sayfaları (kırmızı-siyah-beyaz tema)
 wwwroot/                   CSS ve JavaScript
-sample_data/               Örnek veri seti ve Ek-16 belgeleri
-docs/diyagramlar.md        Diyagramlar
 ```
 
 ## Notlar

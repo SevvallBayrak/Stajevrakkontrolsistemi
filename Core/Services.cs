@@ -153,7 +153,7 @@ public sealed class ApplicationService
         return OperationResult.Success("Evrak başarıyla yüklendi ve analiz edildi.", doc);
     }
 
-    // ------------------------------------------------------------------ analiz
+    // analiz
     public ComparisonReport Analyze(Application app, User actor, string note = "")
     {
         var doc = app.CurrentDocument;
@@ -187,7 +187,7 @@ public sealed class ApplicationService
         return report;
     }
 
-    // ------------------------------------------------------------------ statü
+    // statü
     private void Transition(Application app, DocumentStatus target, User actor, string note)
     {
         var old = app.ChangeStatus(target, actor);
@@ -250,7 +250,7 @@ public sealed class DatasetService
     }
 }
 
-/// <summary>Bağımlılıkların tek noktada oluşturulduğu servis kabı.</summary>
+/// <summary>Bağımlılıkların tek noktada oluşturulduğu servis kabı</summary>
 public sealed class ServiceContainer
 {
     private readonly AppSettings _settings;

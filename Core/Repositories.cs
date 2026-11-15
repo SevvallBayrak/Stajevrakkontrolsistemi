@@ -40,7 +40,7 @@ public abstract class BaseRepository<TEntity, TModel> where TEntity : class wher
     }
 }
 
-// --------------------------------------------------------------------------- okuma modelleri (ekranlar için)
+// okuma modelleri (ekranlar için)
 public sealed class UserListItem
 {
     public int Id { get; init; }

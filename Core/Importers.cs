@@ -9,7 +9,7 @@ namespace StajEvrak.Core;
  * Admin test veri seti içe aktarma (Bölüm 4.3).
  * DatasetImporter soyut sınıfı satırları okuma işini alt sınıflara bırakır
  * (CsvDatasetImporter, XlsxDatasetImporter); başlık eşleme ve satır doğrulama
- * ortak olarak üst sınıfta yapılır (kalıtım).
+ * ortak olarak üst sınıfta yapılır.
  */
 
 public sealed class ImportResult

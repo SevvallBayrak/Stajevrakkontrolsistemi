@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 namespace StajEvrak.Core;
 
 // ---------------------------------------------------------------------------
-// Şifre özetleme (soyutlama: algoritma değiştirilebilir)
+// Şifre özetleme
 // ---------------------------------------------------------------------------
 public abstract class PasswordHasherBase
 {
@@ -46,7 +46,6 @@ public sealed class Pbkdf2PasswordHasher : PasswordHasherBase
     }
 }
 
-// ---------------------------------------------------------------------------
 public sealed class LoginResult
 {
     public bool Success { get; init; }

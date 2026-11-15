@@ -6,10 +6,7 @@ namespace StajEvrak.Core;
  *    belgenin teslime hazır olup olmadığı kontrol edilir.
  *  - Bölüm 4.3: Ek-16'daki öğrenci bilgileri veri setiyle karşılaştırılır, uyuşmazlık raporda belirtilir.
  */
-
-// ---------------------------------------------------------------------------
-// Değer karşılaştırıcılar (strateji deseni + çok biçimlilik)
-// ---------------------------------------------------------------------------
+ 
 public abstract class ValueComparer
 {
     public abstract string Normalize(string value);
