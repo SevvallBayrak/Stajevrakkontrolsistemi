@@ -21,9 +21,4 @@
     <PackageReference Include="PdfPig" Version="0.1.9" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Update="sample_data\**" CopyToOutputDirectory="Never" />
-    <None Include="sample_data\**" />
-  </ItemGroup>
-
 </Project>
