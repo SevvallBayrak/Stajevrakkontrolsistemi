@@ -1,0 +1,20 @@
+@model List<StatusHistoryItem>
+<div class="card">
+    <div class="card-head"><h3>Statü geçmişi</h3></div>
+    <div class="card-body">
+        <ul class="timeline">
+            @foreach (var h in Model)
+            {
+                var label = DocumentStatusExtensions.TryParseStatus(h.NewStatus, out var st) ? st.Label() : h.NewStatus;
+                <li>
+                    <strong>@label</strong>
+                    @if (!string.IsNullOrEmpty(h.Note))
+                    {
+                        <span class="muted">— @h.Note</span>
+                    }
+                    <div class="when">@TextUtils.Format(h.CreatedAt) · @(h.ActorName ?? "Sistem")</div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,107 @@
+@{
+    var me = Context.CurrentUser();
+    var bare = (ViewData["Bare"] as bool?) == true || me == null;
+    var flashes = TempData.ReadFlashes();
+    var routeController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var routeAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var activeMenu = ViewData["ActiveMenu"] as string;
+    var isAdmin = me != null && me.Role == Role.Admin;
+}
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken">
+    <title>@ViewData["Title"] · KOÜ Staj Evrak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true">
+</head>
+<body>
+@if (flashes.Any(f => f.Category != "upload_error"))
+{
+    <div class="toasts">
+        @foreach (var f in flashes.Where(f => f.Category != "upload_error"))
+        {
+            <div class="toast @f.Category">
+                @Ui.FlashIcon(f.Category)
+                <div>@f.Message</div>
+                <button class="close" aria-label="Kapat">×</button>
+            </div>
+        }
+    </div>
+}
+@foreach (var f in flashes.Where(f => f.Category == "upload_error"))
+{
+    <div hidden data-popup data-title="Evrak yüklenemedi"><p>@f.Message</p><p class="muted small">Kabul edilen formatlar: Word (.doc/.docx), PDF, JPEG, PNG.</p></div>
+}
+
+@if (!bare)
+{
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">EK16</div>
+                <div class="brand-text"><strong>Staj Evrak</strong><span>Doğrulama Sistemi</span></div>
+            </div>
+            <nav class="nav">
+                <div class="nav-label">@me.RoleLabel Menüsü</div>
+                @foreach (var item in me.MenuItems)
+                {
+                    var active = (item.Controller == routeController && item.Action == routeAction) || item.Action == activeMenu;
+                    <a href="@Url.Action(item.Action, item.Controller)" class="@(active ? "active" : "")">@Ui.Icon(item.Icon) @item.Label</a>
+                }
+            </nav>
+            <div class="sidebar-user">
+                <div class="avatar @(isAdmin ? "red" : "")">@me.Initials</div>
+                <div class="who"><strong>@me.FullName</strong><span>@me.Username</span></div>
+                <form method="post" asp-controller="Auth" asp-action="Logout">
+                    <button class="icon-btn" title="Çıkış yap" aria-label="Çıkış yap">@Ui.Icon("logout")</button>
+                </form>
+            </div>
+        </aside>
+        <div class="main">
+            <header class="topbar">
+                <div class="crumbs">
+                    @if (IsSectionDefined("Crumbs"))
+                    {
+                        @RenderSection("Crumbs")
+                    }
+                    else
+                    {
+                        <strong>@ViewData["Title"]</strong>
+                    }
+                </div>
+                <div class="spacer"></div>
+                <span class="role-pill @(isAdmin ? "admin" : "")">@me.Role.Code()</span>
+            </header>
+            <main class="content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    if (IsSectionDefined("Crumbs"))
+    {
+        IgnoreSection("Crumbs");
+    }
+    @RenderBody()
+}
+
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+        <div class="modal-top"><div class="ico">@Ui.Icon("alert")</div><h3 id="modal-title">Uyarı</h3></div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="modal-cancel">Vazgeç</button>
+            <button type="button" class="btn btn-dark" id="modal-ok">Tamam</button>
+        </div>
+    </div>
+</div>
+<script src="~/js/app.js" asp-append-version="true"></script>
+</body>
+</html>

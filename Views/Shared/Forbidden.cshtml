@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "403 — Yetkisiz Erişim";
+    ViewData["Bare"] = true;
+    var loginUrl = Url.Action("Login", "Auth");
+}
+<meta http-equiv="refresh" content="5;url=@loginUrl">
+<div class="error-page">
+    <div class="inner">
+        <div class="code">403</div>
+        <h1>Bu sayfaya erişim yetkiniz yok</h1>
+        <p>Oturumunuz bulunmuyor, süresi dolmuş ya da rolünüz bu sayfa için yetkili değil. 5 saniye içinde giriş sayfasına yönlendirileceksiniz.</p>
+        <div class="actions" style="justify-content:center;margin-top:22px">
+            <a class="btn btn-primary" href="@loginUrl">@Ui.Icon("arrow-right") Giriş sayfasına git</a>
+        </div>
+        <div class="progress"><span></span></div>
+    </div>
+</div>

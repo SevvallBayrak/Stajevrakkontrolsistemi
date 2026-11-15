@@ -1,0 +1,41 @@
+@model LoginLogsVm
+@{
+    ViewData["Title"] = "Giriş Kayıtları";
+}
+<div class="page-head">
+    <div><div class="eyebrow">Güvenlik</div><h1>Giriş kayıtları</h1><p>Tüm başarılı ve başarısız oturum açma denemeleri loglanır.</p></div>
+</div>
+<div class="card">
+    <div class="tabs">
+        <a asp-action="LoginLogs" class="@(Model.OnlyFailed ? "" : "active")">Tümü</a>
+        <a asp-action="LoginLogs" asp-route-hatali="1" class="@(Model.OnlyFailed ? "active" : "")">Başarısız</a>
+    </div>
+    <div class="table-wrap"><table class="table">
+        <thead><tr><th>Zaman</th><th>Kullanıcı adı / e-posta</th><th>IP</th><th>Sonuç</th><th>Açıklama</th></tr></thead>
+        <tbody>
+        @foreach (var l in Model.Logs)
+        {
+            <tr>
+                <td class="mono small">@TextUtils.Format(l.CreatedAt)</td>
+                <td><strong>@l.Identifier</strong></td>
+                <td class="mono small muted">@Ui.OrDash(l.IpAddress)</td>
+                <td>
+                    @if (l.Success)
+                    {
+                        <span class="st match">@Ui.Icon("check-circle") Başarılı</span>
+                    }
+                    else
+                    {
+                        <span class="st mismatch">@Ui.Icon("x-circle") Başarısız</span>
+                    }
+                </td>
+                <td class="small">@l.Reason</td>
+            </tr>
+        }
+        @if (Model.Logs.Count == 0)
+        {
+            <tr><td colspan="5"><div class="empty">@Ui.Icon("shield")<h3>Kayıt yok</h3></div></td></tr>
+        }
+        </tbody>
+    </table></div>
+</div>

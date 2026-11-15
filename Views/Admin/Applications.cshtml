@@ -1,0 +1,32 @@
+@model ApplicationListVm
+@{
+    ViewData["Title"] = "Başvurular";
+    var activeTotal = Model.Counts.Values.Sum() - Model.Counts[DocumentStatus.TAMAMLANDI];
+    var q = string.IsNullOrEmpty(Model.Query) ? null : Model.Query;
+}
+<div class="page-head">
+    <div><div class="eyebrow">Başvuru yönetimi</div><h1>Başvurular</h1><p>Devam eden tüm başvurular. Tamamlanan belgeler ayrı sekmede listelenir.</p></div>
+</div>
+<div class="card">
+    <div class="tabs">
+        <a asp-action="Applications" asp-route-q="@q" class="@(string.IsNullOrEmpty(Model.Status) ? "active" : "")">Tümü <span class="n">@activeTotal</span></a>
+        @foreach (var s in Enum.GetValues<DocumentStatus>().Where(x => x != DocumentStatus.TAMAMLANDI))
+        {
+            <a asp-action="Applications" asp-route-statu="@s.ToString()" asp-route-q="@q" class="@(Model.Status == s.ToString() ? "active" : "")">@s.Label() <span class="n">@Model.Counts[s]</span></a>
+        }
+        <a asp-action="Completed">@Ui.Icon("check") Tamamlandı <span class="n">@Model.Counts[DocumentStatus.TAMAMLANDI]</span></a>
+    </div>
+    <form class="toolbar" method="get" asp-action="Applications">
+        @if (!string.IsNullOrEmpty(Model.Status))
+        {
+            <input type="hidden" name="statu" value="@Model.Status">
+        }
+        <div class="input-icon" style="flex:1;max-width:360px">@Ui.Icon("search")<input class="input" name="q" value="@Model.Query" placeholder="Öğrenci adı, numara veya firma ara…"></div>
+        <button class="btn btn-dark btn-sm" style="height:38px">Ara</button>
+        @if (q != null)
+        {
+            <a class="btn btn-ghost btn-sm" style="height:38px" asp-action="Applications" asp-route-statu="@Model.Status">Temizle</a>
+        }
+    </form>
+    <partial name="_AppTable" model="Model.Applications" />
+</div>

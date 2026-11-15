@@ -1,0 +1,118 @@
+@model Document
+@{
+    var r = Model?.Report;
+}
+@if (r == null)
+{
+    <div class="empty">@Ui.Icon("scan")<h3>Henüz rapor yok</h3><p>Belge yüklendiğinde kontrol raporu burada görünecek.</p></div>
+    return;
+}
+
+@if (r.Ready)
+{
+    <div class="verdict ok"><div class="v-icon">@Ui.Icon("check")</div><div><h3>Belge teslime hazır</h3><p>Belgedeki bilgiler sisteme girilen bilgilerle uyumlu. @r.GeneratedAt</p></div></div>
+}
+else if (r.ManualReview)
+{
+    <div class="verdict pending"><div class="v-icon">@Ui.Icon("eye")</div><div><h3>Manuel inceleme gerekiyor</h3><p>Belge otomatik okunamadı · @r.Source</p></div></div>
+}
+else
+{
+    <div class="verdict bad"><div class="v-icon">@Ui.Icon("alert")</div><div><h3>Belge teslime hazır değil</h3><p>Aşağıdaki alanları düzeltip belgeyi yeniden yükleyin veya bilgileri güncelleyin. @r.GeneratedAt</p></div></div>
+}
+
+@{
+    var total = r.Items.Count;
+    string Pct(int n) => total == 0 ? "0" : (n * 100.0 / total).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    var match = r.Count(ItemStatus.Match);
+    var mismatch = r.Count(ItemStatus.Mismatch);
+    var missing = r.Count(ItemStatus.Missing) + r.Count(ItemStatus.NotEntered);
+    var optional = r.Count(ItemStatus.OptionalEmpty);
+}
+@if (!r.ManualReview && total > 0)
+{
+    <div class="meter">
+        <span style="width:@(Pct(match))%;background:var(--ok)"></span>
+        <span style="width:@(Pct(mismatch))%;background:var(--red)"></span>
+        <span style="width:@(Pct(missing))%;background:#f5a623"></span>
+        <span style="width:@(Pct(optional))%;background:var(--line-2)"></span>
+    </div>
+    <div class="legend">
+        <span><i style="background:var(--ok)"></i>@match uyumlu</span>
+        <span><i style="background:var(--red)"></i>@mismatch uyuşmuyor</span>
+        <span><i style="background:#f5a623"></i>@missing eksik</span>
+        <span><i style="background:var(--line-2)"></i>@optional isteğe bağlı boş</span>
+    </div>
+}
+
+@if (r.Messages.Count > 0)
+{
+    <div class="alert @(r.Ready ? "ok" : (r.ManualReview ? "info" : "error"))" style="margin-top:16px">
+        @Ui.Icon("info")
+        <ul style="margin:0;padding-left:16px">
+            @foreach (var m in r.Messages)
+            {
+                <li>@m</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="card" style="margin-top:18px">
+    <div class="card-head"><div><h3>Belge ↔ Sisteme girilen bilgiler</h3><p>Kaynak: @(r.Source + (r.ImageCount > 0 ? $" · belgede {r.ImageCount} görsel (imza/kaşe olabilir)" : ""))</p></div></div>
+    <div class="table-wrap">
+        <table class="table cmp-table">
+            <thead><tr><th>Alan</th><th>Sisteme girilen</th><th>Belgeden okunan</th><th>Durum</th></tr></thead>
+            <tbody>
+            @{ string lastGroup = null; }
+            @foreach (var it in r.Items)
+            {
+                if (it.Group != lastGroup)
+                {
+                    lastGroup = it.Group;
+                    <tr class="group-row"><td colspan="4">@it.Group</td></tr>
+                }
+                <tr class="@it.Status">
+                    <td><strong>@it.Label</strong></td>
+                    <td class="val">@Ui.OrDash(it.Entered)</td>
+                    <td class="val doc">@Ui.OrDash(it.DocumentValue)</td>
+                    <td><span class="st @it.Status">@Ui.StatusIcon(it.Status) @it.StatusLabel</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head">
+        <div><h3>Veri seti karşılaştırması</h3><p>Ek-16'daki öğrenci bilgileri ↔ admin veri setindeki kayıt</p></div>
+        @if (r.DatasetFound)
+        {
+            <span class="badge @(r.DatasetMismatch == 0 ? "approved" : "error")">@r.DatasetMismatch uyuşmazlık</span>
+        }
+    </div>
+    @if (r.DatasetFound)
+    {
+        <div class="table-wrap">
+            <table class="table cmp-table">
+                <thead><tr><th>Alan</th><th>Ek-16</th><th>Veri seti</th><th>Durum</th></tr></thead>
+                <tbody>
+                @foreach (var it in r.DatasetItems)
+                {
+                    <tr class="@it.Status">
+                        <td><strong>@it.Label</strong></td>
+                        <td class="val doc">@Ui.OrDash(it.Value)</td>
+                        <td class="val">@Ui.OrDash(it.DatasetValue)</td>
+                        <td><span class="st @it.Status">@Ui.StatusIcon(it.Status) @it.StatusLabel</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="card-body"><div class="alert warn">@Ui.Icon("alert")<div>Öğrenci, admin tarafından yüklenen veri setinde bulunamadı (T.C. kimlik no / öğrenci no ile arandı).</div></div></div>
+    }
+</div>

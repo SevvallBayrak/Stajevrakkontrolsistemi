@@ -1,0 +1,18 @@
+@model UploadVm
+<form method="post" asp-controller="@Model.Controller" asp-action="@Model.Action" asp-route-appId="@Model.ApplicationId" enctype="multipart/form-data">
+    <div class="dropzone" data-dropzone data-allowed=".doc,.docx,.pdf,.jpg,.jpeg,.png" data-allowed-label="Word (.doc/.docx), PDF, JPEG, PNG" data-max="10485760">
+        <div class="dz-icon">@Ui.Icon("upload")</div>
+        <h3>@(Model.HasDocument ? "Yeni sürüm yükle" : "Ek-16 belgesini sürükleyin")</h3>
+        <p class="muted small" style="margin:0">veya tıklayarak bilgisayarınızdan seçin · en fazla 10 MB</p>
+        <div class="formats"><span>DOCX</span><span>DOC</span><span>PDF</span><span>JPEG</span><span>PNG</span></div>
+        <input type="file" name="document" accept=".doc,.docx,.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label="Evrak seç">
+    </div>
+    <div class="file-chosen"><div class="ext">pdf</div><div style="flex:1;min-width:0"><strong class="name" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></strong><span class="size small muted"></span></div></div>
+    <ul class="checks">
+        <li><span class="dot">@Ui.Icon("check")</span> Dosya seçildi ve boş değil</li>
+        <li><span class="dot">@Ui.Icon("check")</span> Uzantı kabul edilen formatlarda</li>
+        <li><span class="dot">@Ui.Icon("check")</span> Boyut 10 MB sınırının altında</li>
+        <li><span class="dot">@Ui.Icon("check")</span> İçerik uzantıyla uyumlu <span class="small">(sunucuda kontrol edilir)</span></li>
+    </ul>
+    <button class="btn btn-primary btn-block btn-lg" type="submit" style="margin-top:16px">@Ui.Icon("upload") Evrak Yükle</button>
+</form>

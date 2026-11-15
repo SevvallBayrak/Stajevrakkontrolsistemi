@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Giriş";
+    ViewData["Bare"] = true;
+}
+<div class="auth">
+    <partial name="_AuthArt" />
+    <section class="auth-form">
+        <div class="auth-box">
+            <div class="page-head" style="margin:0"><div><div class="eyebrow">Hoş geldiniz</div><h1>Oturum açın</h1></div></div>
+            <p class="sub">Kullanıcı adınız veya e-posta adresinizle giriş yapın.</p>
+            <form method="post" asp-controller="Auth" asp-action="Login" class="stack-sm" autocomplete="on">
+                <div class="field">
+                    <label for="identifier">Kullanıcı adı / E-posta</label>
+                    <div class="input-icon">@Ui.Icon("user")<input class="input" id="identifier" name="identifier" value="@ViewData["Identifier"]" required autofocus autocomplete="username"></div>
+                </div>
+                <div class="field">
+                    <label for="password-login">Şifre</label>
+                    <div class="input-icon">@Ui.Icon("key")<input class="input" type="password" id="password-login" name="password" required autocomplete="current-password">
+                        <button type="button" class="pw-toggle" aria-label="Şifreyi göster">@Ui.Icon("eye")</button></div>
+                    <span class="help">5 hatalı denemede hesabınız geçici olarak kilitlenir.</span>
+                </div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">Giriş yap @Ui.Icon("arrow-right")</button>
+            </form>
+            <p class="alt">Hesabınız yok mu? <a asp-controller="Auth" asp-action="Register"><strong>Öğrenci hesabı oluşturun</strong></a></p>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,130 @@
+@model ApplicationFormVm
+@{
+    var app = Model.Application;
+    ViewData["Title"] = Model.IsNew ? "Yeni Başvuru" : "Başvuruyu Düzenle";
+    ViewData["ActiveMenu"] = Model.AdminMode ? "Applications" : (Model.IsNew ? "NewApplication" : "Dashboard");
+    var controller = Model.AdminMode ? "Admin" : "Student";
+    var action = Model.IsNew ? "NewApplication" : "Edit";
+    var backUrl = Model.IsNew ? Url.Action("Dashboard", "Student") : Url.Action("Detail", controller, new { appId = app.Id });
+    var groupIndex = 0;
+}
+@section Crumbs {
+    @if (Model.AdminMode)
+    {
+        <a asp-controller="Admin" asp-action="Applications">Başvurular</a> <span>/</span> <a href="@backUrl">#@app.Id</a> <span>/</span> <strong>Düzenle</strong>
+    }
+    else if (!Model.IsNew)
+    {
+        <a asp-controller="Student" asp-action="Dashboard">Panelim</a> <span>/</span> <a href="@backUrl">Başvuru #@app.Id</a> <span>/</span> <strong>Düzenle</strong>
+    }
+    else
+    {
+        <a asp-controller="Student" asp-action="Dashboard">Panelim</a> <span>/</span> <strong>Yeni Başvuru</strong>
+    }
+}
+
+<div class="page-head">
+    <div>
+        <div class="eyebrow">Ek-16 · Staj Başvuru Formu</div>
+        <h1>@(Model.IsNew ? "Başvuru bilgilerini girin" : "Başvuru bilgilerini düzenleyin")</h1>
+        <p>Bu bilgiler sistemde saklanır ve yüklediğiniz Ek-16 belgesinden okunan değerlerle karşılaştırılır. Belgede yazanlarla <strong>birebir aynı</strong> girmeniz gerekir.</p>
+    </div>
+</div>
+
+@if (Model.AdminMode && app != null && app.Status == DocumentStatus.TAMAMLANDI)
+{
+    <div class="lock-banner" style="margin-bottom:20px">@Ui.Icon("lock") Bu belge Tamamlandı statüsünde. Yönetici olarak güncelleme yetkiniz var; öğrenci bu belgeyi değiştiremez.</div>
+}
+@if (Model.UrlError != null)
+{
+    <div hidden data-popup data-title="Geçersiz Google Form URL'si"><p>@Model.UrlError</p></div>
+}
+
+<form method="post" asp-controller="@controller" asp-action="@action" asp-route-appId="@(app?.Id)" data-ek16-form novalidate>
+    <div class="card">
+        @foreach (var group in Ek16Schema.Groups)
+        {
+            groupIndex++;
+            <div class="form-section">
+                <div class="form-section-head"><span class="num">@groupIndex</span><h2>@group</h2></div>
+                <div class="form-grid">
+                    @foreach (var f in Ek16Schema.Fields.Where(x => x.Group == group))
+                    {
+                        var value = Model.Value(f.Key);
+                        var mono = (f.Kind is "digits" or "phone" or "int") ? "mono" : "";
+                        <div class="field @(f.InputType == "textarea" ? "full" : "")">
+                            <label for="@f.Key">@f.Label
+                                @if (f.Required)
+                                {
+                                    <span class="req">*</span>
+                                }
+                                else
+                                {
+                                    <span class="muted small">(isteğe bağlı)</span>
+                                }
+                            </label>
+                            @if (f.InputType == "select")
+                            {
+                                <select class="input" id="@f.Key" name="@f.Key">
+                                    <option value="">Seçiniz…</option>
+                                    @foreach (var c in f.Choices)
+                                    {
+                                        <option value="@c" selected="@(value == c)">@c</option>
+                                    }
+                                    @if (value.Length > 0 && !f.Choices.Contains(value))
+                                    {
+                                        <option value="@value" selected>@value</option>
+                                    }
+                                </select>
+                            }
+                            else if (f.InputType == "textarea")
+                            {
+                                <textarea class="input" id="@f.Key" name="@f.Key" placeholder="@f.Placeholder">@value</textarea>
+                            }
+                            else
+                            {
+                                <input class="input @mono" id="@f.Key" name="@f.Key" type="@f.InputType" value="@value" placeholder="@f.Placeholder" min="@(f.InputType == "number" ? "0" : null)">
+                            }
+                        </div>
+                    }
+
+                    @if (group == Ek16Schema.GroupInternship)
+                    {
+                        <div class="field full">
+                            <label>Staj yapılacak haftalık günler <span class="req">*</span></label>
+                            <div class="day-picker">
+                                @foreach (var (dayValue, dayName) in Ek16Schema.Weekdays)
+                                {
+                                    <label><input type="checkbox" name="staj_gunleri" value="@dayValue" checked="@Model.Days.Contains(dayValue)"><span>@dayName</span></label>
+                                }
+                            </div>
+                            @if (!Model.AdminMode)
+                            {
+                                <div class="calc-box" id="calc-result">
+                                    <span class="muted">Seçtiğiniz günlere ve tarih aralığına göre staj gününü hesaplayın (resmi tatiller çıkarılır).</span>
+                                </div>
+                                <div style="margin-top:10px">
+                                    <button type="button" class="btn btn-sm btn-ghost" id="calc-days" data-url="@Url.Action("CalculateDays", "Student")">@Ui.Icon("calendar") Staj gününü hesapla</button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="form-section">
+            <div class="form-section-head"><span class="num">@(Ek16Schema.Groups.Length + 1)</span><h2>Staj Evrağı Teslim Formu</h2></div>
+            <div class="field">
+                <label for="google_form_url">Google Form URL'si <span class="muted small">(isteğe bağlı)</span></label>
+                <div class="input-icon">@Ui.Icon("link")<input class="input @(Model.UrlError != null ? "invalid" : "")" id="google_form_url" name="google_form_url" value="@Model.Url" placeholder="https://docs.google.com/forms/d/e/…/viewform"></div>
+                <span class="help">Belge Tamamlandı statüsüne geçtiğinde bilgiler bu forma otomatik kaydedilecektir (final aşaması).</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions" style="justify-content:flex-end;margin-top:20px">
+        <a href="@backUrl" class="btn btn-ghost">Vazgeç</a>
+        <button class="btn btn-primary btn-lg" type="submit">@Ui.Icon("check") @(Model.IsNew ? "Kaydet ve devam et" : "Değişiklikleri kaydet")</button>
+    </div>
+</form>

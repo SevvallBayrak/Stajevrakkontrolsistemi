@@ -1,0 +1,55 @@
+@model DatasetRecord
+@{
+    ViewData["Title"] = "Profilim";
+    var me = (Student)Context.CurrentUser();
+}
+<div class="page-head"><div><div class="eyebrow">Hesap</div><h1>Profilim</h1><p>Hesap bilgileriniz ve admin veri setindeki kaydınız.</p></div></div>
+<div class="grid grid-2">
+    <div class="stack">
+        <div class="card">
+            <div class="card-head"><h3>Hesap bilgileri</h3>@Ui.Icon("id")</div>
+            <div class="card-body">
+                <dl class="kv">
+                    <dt>Ad Soyad</dt><dd>@me.FullName</dd>
+                    <dt>Kullanıcı adı</dt><dd class="mono">@me.Username</dd>
+                    <dt>E-posta</dt><dd>@me.Email</dd>
+                    <dt>Öğrenci No</dt><dd class="mono">@me.StudentNo</dd>
+                    <dt>Kimlik No</dt><dd class="mono">@me.TcKimlikNo</dd>
+                    <dt>Rol</dt><dd><span class="role-pill">@me.Role.Code()</span></dd>
+                    <dt>Kayıt tarihi</dt><dd>@me.CreatedAt</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Şifre değiştir</h3>@Ui.Icon("key")</div>
+            <form class="card-body" method="post" asp-action="Profile">
+                <div class="form-grid">
+                    <div class="field full"><label for="current">Mevcut şifre</label><input class="input" type="password" id="current" name="current" required autocomplete="current-password"></div>
+                    <div class="field"><label for="password">Yeni şifre</label><input class="input" type="password" id="password" name="new" minlength="8" required autocomplete="new-password"><div class="pw-meter"><span id="pw-meter"></span></div></div>
+                    <div class="field"><label for="confirm">Yeni şifre (tekrar)</label><input class="input" type="password" id="confirm" name="confirm" minlength="8" required autocomplete="new-password"></div>
+                </div>
+                <button class="btn btn-dark" style="margin-top:16px">@Ui.Icon("check") Şifreyi güncelle</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-head"><div><h3>Veri setindeki kaydım</h3><p>Admin tarafından yüklenen test veri seti</p></div>@Ui.Icon("database")</div>
+        <div class="card-body">
+            @if (Model != null)
+            {
+                <dl class="kv">
+                    @foreach (var key in Ek16Schema.DatasetKeys)
+                    {
+                        var val = Model.Get(key);
+                        <dt>@Ek16Schema.DatasetLabels[key]</dt>
+                        <dd>@(key == "dogum_tarihi" ? Ui.Date(val) : Ui.OrDash(val))</dd>
+                    }
+                </dl>
+            }
+            else
+            {
+                <div class="empty">@Ui.Icon("database")<h3>Kayıt bulunamadı</h3><p>Kimlik veya öğrenci numaranız veri setinde yok.</p></div>
+            }
+        </div>
+    </div>
+</div>

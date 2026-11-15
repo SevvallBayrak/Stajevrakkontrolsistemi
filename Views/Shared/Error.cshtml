@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = $"{ViewData["Code"]} — {ViewData["ErrorTitle"]}";
+    var anonymous = Context.CurrentUser() == null;
+}
+@if (anonymous)
+{
+    <div class="error-page"><div class="inner">
+        <div class="code">@ViewData["Code"]</div>
+        <h1>@ViewData["ErrorTitle"]</h1>
+        <p>@ViewData["ErrorMessage"]</p>
+        <a class="btn btn-primary" href="/" style="margin-top:18px">Ana sayfa</a>
+    </div></div>
+}
+else
+{
+    <div class="card"><div class="empty">
+        @Ui.Icon("alert")
+        <h3>@ViewData["Code"] · @ViewData["ErrorTitle"]</h3>
+        <p>@ViewData["ErrorMessage"]</p>
+        <a class="btn btn-dark" href="/" style="margin-top:12px">@Ui.Icon("arrow-left") Ana sayfaya dön</a>
+    </div></div>
+}

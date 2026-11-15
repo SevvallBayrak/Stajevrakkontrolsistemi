@@ -1,0 +1,44 @@
+@model UsersVm
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+<div class="page-head"><div><div class="eyebrow">Hesaplar</div><h1>Kullanıcılar</h1><p>Öğrenciler hesaplarını kendileri oluşturur. 5 hatalı girişte kilitlenen hesapların kilidini buradan açabilirsiniz.</p></div></div>
+<div class="card"><div class="table-wrap">
+    <table class="table">
+        <thead><tr><th>Kullanıcı</th><th>Rol</th><th>E-posta</th><th>Öğrenci No</th><th>Başvuru</th><th>Hatalı deneme</th><th>Durum</th><th>Kayıt</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var u in Model.Users)
+        {
+            var locked = u.IsLocked(Model.Now);
+            var fullName = u.FullName ?? "";
+            <tr>
+                <td><div class="person"><div class="avatar">@(fullName.Length > 0 ? fullName.Substring(0, 1) : "?")</div><div><strong>@fullName</strong><span class="small muted mono">@u.Username</span></div></div></td>
+                <td><span class="role-pill @(u.Role == "ROLE_ADMIN" ? "admin" : "")" style="font-size:10px">@u.Role</span></td>
+                <td class="small">@u.Email</td>
+                <td class="mono">@Ui.OrDash(u.StudentNo)</td>
+                <td>@u.ApplicationCount</td>
+                <td>@u.FailedAttempts/5</td>
+                <td>
+                    @if (locked)
+                    {
+                        <span class="badge error">Kilitli · @(u.LockedUntil.Value.ToString("HH:mm"))'e kadar</span>
+                    }
+                    else
+                    {
+                        <span class="badge approved">Aktif</span>
+                    }
+                </td>
+                <td class="small muted">@u.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>
+                    @if (locked || u.FailedAttempts > 0)
+                    {
+                        <form method="post" asp-action="UnlockUser" asp-route-userId="@u.Id">
+                            <button class="btn btn-sm btn-ghost">@Ui.Icon("unlock") @(locked ? "Kilidi aç" : "Sıfırla")</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div></div>

@@ -1,0 +1,107 @@
+@model DatasetVm
+@{
+    ViewData["Title"] = "Veri Seti";
+    var imp = Model.Import;
+}
+<div class="page-head">
+    <div><div class="eyebrow">Test veri seti</div><h1>Öğrenci veri seti</h1><p>Admin arayüzünü test etmek için öğrenci bilgilerini CSV veya Excel dosyasından içe aktarın. Yüklenen Ek-16 belgeleri bu kayıtlarla karşılaştırılır.</p></div>
+    <div class="actions">
+        <a class="btn btn-ghost" asp-action="DatasetTemplate">@Ui.Icon("download") Şablon (CSV)</a>
+        @if (Model.Records.Count > 0)
+        {
+            <form method="post" asp-action="ClearDataset" data-confirm="Veri setindeki tüm kayıtlar silinecek. Kullanıcı hesapları ve başvurular etkilenmez." data-confirm-title="Veri seti temizlensin mi?" data-confirm-ok="Temizle">
+                <button class="btn btn-danger-ghost">@Ui.Icon("trash") Temizle</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="split" style="grid-template-columns:minmax(320px,1fr) minmax(0,2fr);margin-bottom:20px">
+    <div class="card">
+        <div class="card-head"><h3>Veri seti yükle</h3>@Ui.Icon("upload")</div>
+        <form class="card-body" method="post" asp-action="Dataset" enctype="multipart/form-data">
+            <div class="dropzone" data-dropzone data-allowed=".csv,.xlsx" data-allowed-label="CSV, XLSX" data-max="10485760">
+                <div class="dz-icon">@Ui.Icon("database")</div>
+                <h3>CSV / Excel dosyası</h3>
+                <p class="muted small" style="margin:0">Sürükleyin veya tıklayın</p>
+                <div class="formats"><span>CSV</span><span>XLSX</span></div>
+                <input type="file" name="dataset" accept=".csv,.xlsx" aria-label="Veri seti seç">
+            </div>
+            <div class="file-chosen"><div class="ext">csv</div><div style="flex:1;min-width:0"><strong class="name" style="display:block"></strong><span class="size small muted"></span></div></div>
+            <ul class="checks"><li><span class="dot">@Ui.Icon("check")</span> Dosya seçildi</li><li><span class="dot">@Ui.Icon("check")</span> CSV veya XLSX</li><li><span class="dot">@Ui.Icon("check")</span> 10 MB altında</li></ul>
+            <label class="checkbox" style="margin-top:14px"><input type="checkbox" name="replace" value="1"> Mevcut veri setini sil ve yerine yükle</label>
+            <button class="btn btn-primary btn-block" style="margin-top:14px" type="submit">@Ui.Icon("upload") İçe aktar</button>
+        </form>
+    </div>
+    <div class="card">
+        <div class="card-head"><div><h3>Beklenen sütunlar</h3><p>Başlıklar Türkçe karakterli/karaktersiz yazılabilir; sıralama önemli değildir.</p></div></div>
+        <div class="card-body">
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+                @foreach (var key in Ek16Schema.DatasetKeys)
+                {
+                    var required = Ek16Schema.DatasetRequired.Contains(key);
+                    <span class="tag" style="@(required ? "background:var(--ink);color:#fff;border-color:var(--ink)" : "")">@Ek16Schema.DatasetLabels[key]</span>
+                }
+            </div>
+            <p class="small muted" style="margin:12px 0 0">Koyu renkli sütunlar zorunludur. Kayıtlar TC kimlik no veya öğrenci no ile eşleştirilir; aynı öğrenci tekrar yüklenirse kaydı güncellenir.</p>
+            @if (imp != null)
+            {
+                <div style="margin-top:16px">
+                    @if (imp.ColumnMap.Count > 0)
+                    {
+                        <div class="alert info" style="margin-bottom:10px">@Ui.Icon("info")<div><strong>Eşlenen sütunlar:</strong> @(string.Join(", ", imp.ColumnMap.Select(kv => kv.Key + " ← " + kv.Value)))</div></div>
+                    }
+                    @if (imp.Errors.Count > 0)
+                    {
+                        <div class="alert error">@Ui.Icon("x-circle")<div><strong>@imp.Errors.Count satır/uyarı:</strong><ul>
+                            @foreach (var e in imp.Errors.Take(12))
+                            {
+                                <li>@e</li>
+                            }
+                        </ul></div></div>
+                    }
+                    @if (imp.Warnings.Count > 0)
+                    {
+                        <div class="alert warn" style="margin-top:10px">@Ui.Icon("alert")<div><ul style="margin:0">
+                            @foreach (var w in imp.Warnings)
+                            {
+                                <li>@w</li>
+                            }
+                        </ul></div></div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head"><div><h2>Kayıtlar</h2><p>@Model.Records.Count öğrenci</p></div>
+        <form method="get" asp-action="Dataset" class="input-icon" style="width:300px">@Ui.Icon("search")<input class="input" name="q" value="@Model.Query" placeholder="Ad, TC, numara, bölüm…"></form>
+    </div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead><tr>
+                @foreach (var key in Ek16Schema.DatasetKeys)
+                {
+                    <th>@Ek16Schema.DatasetLabels[key]</th>
+                }
+            </tr></thead>
+            <tbody>
+            @foreach (var r in Model.Records)
+            {
+                <tr>
+                    <td><strong>@r.AdSoyad</strong></td><td class="mono">@r.TcKimlikNo</td><td>@Ui.OrDash(r.Uyruk)</td><td class="mono">@r.OgrenciNo</td>
+                    <td>@Ui.Date(r.DogumTarihi)</td><td class="small" style="min-width:220px">@Ui.OrDash(r.IkametgahAdresi)</td><td>@Ui.OrDash(r.Bolum)</td>
+                    <td>@Ui.OrDash(r.TeslimYili)</td><td>@(r.OncekiStajGun?.ToString() ?? "—")</td><td class="small">@Ui.OrDash(r.Eposta)</td>
+                    <td class="mono small" style="white-space:nowrap">@Ui.OrDash(r.Telefon)</td><td class="small">@Ui.OrDash(r.SaglikYardimi)</td>
+                </tr>
+            }
+            @if (Model.Records.Count == 0)
+            {
+                <tr><td colspan="12"><div class="empty">@Ui.Icon("database")<h3>Veri seti boş</h3><p>CSV veya XLSX dosyası yükleyerek başlayın. Şablonu indirip doldurabilirsiniz.</p></div></td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

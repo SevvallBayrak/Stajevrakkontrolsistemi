@@ -1,0 +1,52 @@
+@model Dictionary<string, string>
+@{
+    ViewData["Title"] = "Kayıt Ol";
+    ViewData["Bare"] = true;
+    string V(string key) => Model != null && Model.TryGetValue(key, out var v) ? v : "";
+}
+<div class="auth">
+    <partial name="_AuthArt" />
+    <section class="auth-form">
+        <div class="auth-box wide">
+            <div class="page-head" style="margin:0"><div><div class="eyebrow">Öğrenci kaydı</div><h1>Hesabınızı oluşturun</h1></div></div>
+            <p class="sub">Bilgileriniz Ek-16 formunuzu doldururken otomatik olarak kullanılır. Şifrenizi kendiniz belirleyin.</p>
+            <form method="post" asp-controller="Auth" asp-action="Register" autocomplete="on">
+                <div class="form-grid">
+                    <div class="field full">
+                        <label for="full_name">Ad Soyad <span class="req">*</span></label>
+                        <input class="input" id="full_name" name="full_name" value="@V("full_name")" required autocomplete="name">
+                    </div>
+                    <div class="field">
+                        <label for="student_no">Öğrenci No <span class="req">*</span></label>
+                        <input class="input mono" id="student_no" name="student_no" value="@V("student_no")" inputmode="numeric" pattern="\d{5,12}" required>
+                    </div>
+                    <div class="field">
+                        <label for="tc_kimlik_no">T.C. / Yabancı Kimlik No <span class="req">*</span></label>
+                        <input class="input mono" id="tc_kimlik_no" name="tc_kimlik_no" value="@V("tc_kimlik_no")" inputmode="numeric" maxlength="11" pattern="[1-9]\d{10}" required>
+                    </div>
+                    <div class="field">
+                        <label for="username">Kullanıcı adı <span class="req">*</span></label>
+                        <input class="input" id="username" name="username" value="@V("username")" pattern="[A-Za-z0-9._]{3,30}" required autocomplete="username">
+                    </div>
+                    <div class="field">
+                        <label for="email">E-posta <span class="req">*</span></label>
+                        <input class="input" type="email" id="email" name="email" value="@V("email")" required autocomplete="email">
+                    </div>
+                    <div class="field">
+                        <label for="password">Şifre <span class="req">*</span></label>
+                        <div class="input-icon">@Ui.Icon("key")<input class="input" type="password" id="password" name="password" minlength="8" required autocomplete="new-password">
+                            <button type="button" class="pw-toggle" aria-label="Şifreyi göster">@Ui.Icon("eye")</button></div>
+                        <div class="pw-meter"><span id="pw-meter"></span></div>
+                        <span class="help">En az 8 karakter, harf ve rakam içermeli.</span>
+                    </div>
+                    <div class="field">
+                        <label for="password_confirm">Şifre (tekrar) <span class="req">*</span></label>
+                        <div class="input-icon">@Ui.Icon("key")<input class="input" type="password" id="password_confirm" name="password_confirm" minlength="8" required autocomplete="new-password"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit" style="margin-top:22px">Hesap oluştur @Ui.Icon("arrow-right")</button>
+            </form>
+            <p class="alt">Zaten hesabınız var mı? <a asp-controller="Auth" asp-action="Login"><strong>Giriş yapın</strong></a></p>
+        </div>
+    </section>
+</div>

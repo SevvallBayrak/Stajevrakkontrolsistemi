@@ -1,0 +1,77 @@
+@model StudentDashboardVm
+@{
+    ViewData["Title"] = "Panelim";
+    var me = Context.CurrentUser();
+}
+<div class="hero-strip" style="margin-bottom:24px">
+    <div>
+        <h2>Merhaba, @(me.FullName.Split(' ')[0]) 👋</h2>
+        <p>Ek-16 bilgilerinizi girin, belgenizi yükleyin. Sistem belgeyi okuyup girdiğiniz bilgilerle karşılaştırır ve teslime hazır olup olmadığını raporlar.</p>
+    </div>
+    <a asp-action="NewApplication" class="btn btn-primary btn-lg">@Ui.Icon("plus") Yeni Başvuru</a>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card stat dark"><div class="label">Başvurularım</div><div class="value">@Model.Total</div><div class="hint">toplam</div></div>
+    <div class="card stat"><div class="label">Teslime hazır</div><div class="value" style="color:var(--ok)">@Model.Ready</div><div class="hint">Onaylandı / Tamamlandı</div></div>
+    <div class="card stat red"><div class="label">Düzeltilecek</div><div class="value">@Model.Problem</div><div class="hint">Hatalı / Eksik</div></div>
+    <div class="card stat"><div class="label">Bekleyen</div><div class="value">@Model.Waiting</div><div class="hint">Taslak / İnceleniyor</div></div>
+</div>
+
+<div class="split">
+    <div class="card">
+        <div class="card-head"><div><h2>Başvurularım</h2><p>Her başvuru için Ek-16 belgesi yükleyip kontrol raporunu görebilirsiniz.</p></div></div>
+        @if (Model.Applications.Count == 0)
+        {
+            <div class="empty">@Ui.Icon("file")<h3>Henüz başvurunuz yok</h3><p>İlk başvurunuzu oluşturarak başlayın.</p>
+                <a asp-action="NewApplication" class="btn btn-dark" style="margin-top:8px">@Ui.Icon("plus") Başvuru oluştur</a></div>
+        }
+        @foreach (var app in Model.Applications)
+        {
+            <a class="app-card" asp-action="Detail" asp-route-appId="@app.Id">
+                <div class="doc-ico">@Ui.Icon("file")</div>
+                <div>
+                    <h3>@(string.IsNullOrEmpty(app.Field("firma_adi")) ? "Firma belirtilmedi" : app.Field("firma_adi"))</h3>
+                    <div class="meta">
+                        <span>@Ui.Icon("calendar") @Ui.Date(app.Field("staj_baslangic")) – @Ui.Date(app.Field("staj_bitis"))</span>
+                        <span>@app.Field("ogretim_yili") @app.Field("yariyil")</span>
+                        <span class="tag">@(app.CurrentDocument?.KindLabel ?? "Evrak yok")</span>
+                    </div>
+                </div>
+                <div style="text-align:right">@Ui.Badge(app.Status)<div class="small muted" style="margin-top:6px">@Ui.Short(app.UpdatedAt)</div></div>
+            </a>
+        }
+    </div>
+
+    <div class="stack">
+        <div class="card">
+            <div class="card-head"><div><h3>Veri seti eşleşmesi</h3><p>Admin tarafından yüklenen öğrenci kaydı</p></div>@Ui.Icon("database")</div>
+            <div class="card-body">
+                @if (Model.Record != null)
+                {
+                    <div class="alert ok" style="margin-bottom:14px">@Ui.Icon("check-circle")<div>Kaydınız veri setinde bulundu. Yüklediğiniz Ek-16 bu bilgilerle de karşılaştırılır.</div></div>
+                    <dl class="kv">
+                        <dt>Bölüm</dt><dd>@Ui.OrDash(Model.Record.Bolum)</dd>
+                        <dt>Teslim yılı</dt><dd>@Ui.OrDash(Model.Record.TeslimYili)</dd>
+                        <dt>Önceki staj</dt><dd>@(Model.Record.OncekiStajGun?.ToString() ?? "—") gün</dd>
+                    </dl>
+                }
+                else
+                {
+                    <div class="alert warn">@Ui.Icon("alert")<div>Öğrenci no / kimlik no bilginiz admin veri setinde henüz bulunmuyor. Karşılaştırma raporunda bu durum belirtilecektir.</div></div>
+                }
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Nasıl çalışır?</h3></div>
+            <div class="card-body">
+                <ul class="timeline">
+                    <li><strong>Bilgileri girin</strong><div class="when">Ek-16'daki bilgileri sistemdeki forma girin, staj günlerini seçin.</div></li>
+                    <li><strong>Evrakı yükleyin</strong><div class="when">Word, PDF, JPEG veya PNG — diğer formatlar reddedilir.</div></li>
+                    <li><strong>Raporu inceleyin</strong><div class="when">Belgeden okunan değerler girdiklerinizle karşılaştırılır.</div></li>
+                    <li><strong>Tamamlandı</strong><div class="when">Onaylanan belge admin tarafından tamamlanır; artık değiştirilemez.</div></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

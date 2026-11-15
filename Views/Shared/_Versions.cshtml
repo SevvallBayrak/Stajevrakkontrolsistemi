@@ -1,0 +1,20 @@
+@model Application
+@{
+    var isAdmin = Context.CurrentUser()?.Role == Role.Admin;
+    var controller = isAdmin ? "Admin" : "Student";
+}
+@foreach (var d in Model.Documents)
+{
+    <div class="app-card" style="padding:14px 18px">
+        <div class="doc-ico" style="width:38px;height:38px">@Ui.Icon("file")</div>
+        <div style="min-width:0">
+            <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@d.OriginalName</strong>
+            <div class="meta"><span>@d.KindLabel</span><span>@d.SizeLabel</span><span>@Ui.Short(d.UploadedAt)</span>@if (d.IsCurrent){<span class="tag">güncel</span>}</div>
+        </div>
+        <a class="btn btn-sm btn-ghost" asp-controller="@controller" asp-action="Download" asp-route-appId="@Model.Id" asp-route-docId="@d.Id" target="_blank">@Ui.Icon(isAdmin ? "download" : "eye")</a>
+    </div>
+}
+@if (Model.Documents.Count == 0)
+{
+    <div class="card-body muted small">Henüz evrak yüklenmedi.</div>
+}

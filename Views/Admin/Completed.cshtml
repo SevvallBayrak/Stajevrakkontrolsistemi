@@ -1,0 +1,17 @@
+@model ApplicationListVm
+@{
+    ViewData["Title"] = "Tamamlandı";
+}
+<div class="page-head">
+    <div><div class="eyebrow">Arşiv</div><h1>Tamamlanan belgeler</h1><p>Bu belgeler öğrenciler tarafından değiştirilemez veya silinemez. Güncelleme ve silme yalnızca bu panelden yapılabilir.</p></div>
+    <div class="actions"><button class="btn btn-dark" disabled title="Final aşamasında eklenecek">@Ui.Icon("sparkle") Ek-17 oluştur <span class="tag" style="margin-left:4px">Final</span></button></div>
+</div>
+<div class="card">
+    <form class="toolbar" method="get" asp-action="Completed">
+        <div class="input-icon" style="flex:1;max-width:360px">@Ui.Icon("search")<input class="input" name="q" value="@Model.Query" placeholder="Öğrenci adı, numara veya firma ara…"></div>
+        <button class="btn btn-dark btn-sm" style="height:38px">Ara</button>
+        <span style="flex:1"></span>
+        <span class="lock-banner" style="padding:8px 12px;font-size:12.5px">@Ui.Icon("lock") Öğrenci için kilitli</span>
+    </form>
+    <partial name="_AppTable" model="Model.Applications" />
+</div>

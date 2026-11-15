@@ -1,0 +1,51 @@
+@model AdminDashboardVm
+@{
+    ViewData["Title"] = "Genel Bakış";
+    var max = Math.Max(1, Model.Counts.Values.Max());
+}
+<div class="page-head">
+    <div><div class="eyebrow">Yönetim paneli</div><h1>Genel bakış</h1><p>Başvuruların durumu, veri seti ve güvenlik özetleri.</p></div>
+    <div class="actions">
+        <a class="btn btn-ghost" asp-action="Dataset">@Ui.Icon("database") Veri seti yükle</a>
+        <a class="btn btn-primary" asp-action="Applications">@Ui.Icon("file") Başvurular</a>
+    </div>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:22px">
+    <div class="card stat dark"><div class="label">Toplam başvuru</div><div class="value">@Model.Total</div><div class="hint">@Model.StudentCount kayıtlı öğrenci</div></div>
+    <div class="card stat red"><div class="label">Hatalı / Eksik</div><div class="value">@Model.Counts[DocumentStatus.HATALI_EKSIK]</div><div class="hint">düzeltme bekliyor</div></div>
+    <div class="card stat"><div class="label">Tamamlandı</div><div class="value">@Model.Counts[DocumentStatus.TAMAMLANDI]</div><div class="hint">@Model.Counts[DocumentStatus.ONAYLANDI] onay bekleyen</div></div>
+    <div class="card stat"><div class="label">Veri seti</div><div class="value">@Model.DatasetCount</div><div class="hint">öğrenci kaydı</div></div>
+</div>
+
+<div class="split">
+    <div class="card">
+        <div class="card-head"><div><h2>Son hareketler</h2><p>En son güncellenen başvurular</p></div><a asp-action="Applications" class="btn btn-sm btn-ghost">Tümü @Ui.Icon("arrow-right")</a></div>
+        <partial name="_AppTable" model="Model.Recent" />
+    </div>
+    <div class="stack">
+        <div class="card">
+            <div class="card-head"><h3>Statü dağılımı</h3></div>
+            <div class="card-body bars">
+                @foreach (var s in Enum.GetValues<DocumentStatus>())
+                {
+                    var pct = (Model.Counts[s] * 100.0 / max).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                    <div class="row"><span>@s.Label()</span><div class="track"><div class="fill @(s == DocumentStatus.HATALI_EKSIK ? "red" : "")" style="width:@(pct)%"></div></div><span class="n">@Model.Counts[s]</span></div>
+                }
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Güvenlik</h3>@Ui.Icon("shield")</div>
+            <div class="card-body">
+                <dl class="kv">
+                    <dt>Bugünkü hatalı giriş</dt><dd><strong style="color:@(Model.FailedToday > 0 ? "var(--red)" : "inherit")">@Model.FailedToday</strong></dd>
+                    <dt>Kilitli hesap</dt><dd>@Model.LockedCount</dd>
+                </dl>
+                <div class="actions" style="margin-top:14px">
+                    <a class="btn btn-sm btn-ghost" asp-action="LoginLogs" asp-route-hatali="1">Hatalı girişler</a>
+                    <a class="btn btn-sm btn-ghost" asp-action="Users">Kullanıcılar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

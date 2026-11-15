@@ -1,0 +1,141 @@
+@model ApplicationDetailVm
+@{
+    var app = Model.Application;
+    var completed = app.Status == DocumentStatus.TAMAMLANDI;
+    ViewData["Title"] = $"Başvuru #{app.Id}";
+    ViewData["ActiveMenu"] = completed ? "Completed" : "Applications";
+    var confirmText = $"Başvuru #{app.Id} ve tüm evrak sürümleri kalıcı olarak silinecek." + (completed ? " Bu belge Tamamlandı statüsünde." : "");
+}
+@section Crumbs {
+    <a asp-action="@(completed ? "Completed" : "Applications")">@(completed ? "Tamamlandı" : "Başvurular")</a> <span>/</span> <strong>#@app.Id · @app.StudentName</strong>
+}
+<div class="page-head">
+    <div>
+        <div class="eyebrow">Başvuru #@app.Id · @app.StudentNo</div>
+        <h1>@app.StudentName</h1>
+        <p>@Ui.OrDash(app.Field("firma_adi")) · @Ui.Date(app.Field("staj_baslangic")) – @Ui.Date(app.Field("staj_bitis"))</p>
+    </div>
+    <div class="actions">
+        @Ui.Badge(app.Status, true)
+        <a class="btn btn-ghost" asp-action="Edit" asp-route-appId="@app.Id">@Ui.Icon("edit") Düzenle</a>
+        @if (app.CurrentDocument != null)
+        {
+            <form method="post" asp-action="Reanalyze" asp-route-appId="@app.Id">
+                <button class="btn btn-ghost">@Ui.Icon("refresh") Yeniden analiz</button>
+            </form>
+        }
+        <form method="post" asp-action="Delete" asp-route-appId="@app.Id" data-confirm="@confirmText" data-confirm-title="Başvuru silinsin mi?" data-confirm-ok="Evet, sil">
+            <button class="btn btn-danger-ghost">@Ui.Icon("trash") Sil</button>
+        </form>
+    </div>
+</div>
+
+<div class="card card-body" style="margin-bottom:20px">@Ui.StatusFlow(app.Status)</div>
+
+<div class="split">
+    <div>
+        <h2 style="margin-bottom:14px">Evrak ve kontrol raporu</h2>
+        @if (app.CurrentDocument != null)
+        {
+            <partial name="_Report" model="app.CurrentDocument" />
+        }
+        else
+        {
+            <div class="card"><div class="empty">@Ui.Icon("upload")<h3>Evrak yüklenmemiş</h3><p>Öğrenci henüz Ek-16 belgesi yüklemedi.</p></div></div>
+        }
+    </div>
+
+    <div class="stack">
+        <div class="card">
+            <div class="card-head"><div><h3>Statü yönetimi</h3><p>Yönetici tüm geçişleri yapabilir</p></div>@Ui.Icon("layers")</div>
+            <form class="card-body" method="post" asp-action="ChangeStatus" asp-route-appId="@app.Id">
+                <div class="field"><label for="status">Yeni statü</label>
+                    <select class="input" id="status" name="status">
+                        @foreach (var s in Enum.GetValues<DocumentStatus>())
+                        {
+                            <option value="@s.ToString()" selected="@(s == app.Status)">@s.Label()</option>
+                        }
+                    </select>
+                </div>
+                <div class="field" style="margin-top:12px"><label for="note">Öğrenciye not <span class="muted small">(isteğe bağlı)</span></label>
+                    <textarea class="input" id="note" name="note" rows="2" placeholder="Örn. İşveren kaşesi eksik.">@app.AdminNote</textarea></div>
+                <div class="actions" style="margin-top:14px">
+                    <button class="btn btn-dark">@Ui.Icon("check") Statüyü güncelle</button>
+                    @if (app.Status == DocumentStatus.ONAYLANDI)
+                    {
+                        <button class="btn btn-primary" name="status" value="TAMAMLANDI">@Ui.Icon("lock") Tamamlandı yap</button>
+                    }
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3>Öğrenci bilgileri (sisteme girilen)</h3>@Ui.Icon("id")</div>
+            <div class="card-body">
+                <dl class="kv">
+                    @foreach (var f in Ek16Schema.Fields.Where(x => x.Group == Ek16Schema.GroupStudent))
+                    {
+                        <dt>@f.Label</dt>
+                        <dd>@(f.Kind == "date" ? Ui.Date(app.Field(f.Key)) : Ui.OrDash(app.Field(f.Key)))</dd>
+                    }
+                    <dt>Staj günleri</dt><dd>@(string.Join(", ", app.StajGunleri.Select(Ek16Schema.WeekdayName)))</dd>
+                    <dt>Google Form</dt>
+                    <dd>
+                        @if (!string.IsNullOrEmpty(app.GoogleFormUrl))
+                        {
+                            <a href="@app.GoogleFormUrl" target="_blank" rel="noopener">Bağlantı</a>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3>İşyeri bilgileri</h3>@Ui.Icon("building")</div>
+            <div class="card-body"><dl class="kv">
+                @foreach (var f in Ek16Schema.Fields.Where(x => x.Group == Ek16Schema.GroupCompany))
+                {
+                    <dt>@f.Label</dt><dd>@Ui.OrDash(app.Field(f.Key))</dd>
+                }
+            </dl></div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div><h3>Veri seti kaydı</h3><p>TC / öğrenci no ile eşleşen kayıt</p></div>@Ui.Icon("database")</div>
+            <div class="card-body">
+                @if (Model.Record != null)
+                {
+                    <dl class="kv">
+                        @foreach (var key in Ek16Schema.DatasetKeys)
+                        {
+                            var val = Model.Record.Get(key);
+                            <dt>@Ek16Schema.DatasetLabels[key]</dt>
+                            <dd>@(key == "dogum_tarihi" ? Ui.Date(val) : Ui.OrDash(val))</dd>
+                        }
+                    </dl>
+                }
+                else
+                {
+                    <div class="alert warn">@Ui.Icon("alert")<div>Bu öğrenci veri setinde bulunamadı.</div></div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3>Evrak sürümleri</h3><span class="tag">@app.Documents.Count</span></div>
+            <partial name="_Versions" model="app" />
+            <details class="card-body" style="border-top:1px solid var(--line)">
+                <summary style="cursor:pointer;font-weight:600">Yönetici olarak yeni sürüm yükle</summary>
+                <div style="margin-top:14px">
+                    <partial name="_Upload" model='new UploadVm { Controller = "Admin", Action = "Upload", ApplicationId = app.Id, HasDocument = app.CurrentDocument != null }' />
+                </div>
+            </details>
+        </div>
+
+        <partial name="_History" model="Model.History" />
+    </div>
+</div>

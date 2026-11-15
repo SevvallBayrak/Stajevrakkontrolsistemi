@@ -1,0 +1,86 @@
+@model ApplicationDetailVm
+@{
+    var app = Model.Application;
+    ViewData["Title"] = $"Başvuru #{app.Id}";
+    ViewData["ActiveMenu"] = "Dashboard";
+}
+@section Crumbs {
+    <a asp-action="Dashboard">Panelim</a> <span>/</span> <strong>Başvuru #@app.Id</strong>
+}
+<div class="page-head">
+    <div>
+        <div class="eyebrow">Başvuru #@app.Id</div>
+        <h1>@(string.IsNullOrEmpty(app.Field("firma_adi")) ? "Staj başvurusu" : app.Field("firma_adi"))</h1>
+        <p>@Ui.Date(app.Field("staj_baslangic")) – @Ui.Date(app.Field("staj_bitis")) · @app.Field("ogretim_yili") @app.Field("yariyil") · @app.Field("staj_gun_sayisi") gün</p>
+    </div>
+    <div class="actions">
+        @Ui.Badge(app.Status, true)
+        @if (Model.CanModify)
+        {
+            <a class="btn btn-ghost" asp-action="Edit" asp-route-appId="@app.Id">@Ui.Icon("edit") Bilgileri düzenle</a>
+            <form method="post" asp-action="Delete" asp-route-appId="@app.Id" data-confirm="Bu başvuru ve yüklenen tüm evrak sürümleri kalıcı olarak silinecek." data-confirm-title="Başvuru silinsin mi?" data-confirm-ok="Evet, sil">
+                <button class="btn btn-danger-ghost">@Ui.Icon("trash") Sil</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="card card-body" style="margin-bottom:20px">@Ui.StatusFlow(app.Status)</div>
+
+@if (!Model.CanModify)
+{
+    <div class="lock-banner" style="margin-bottom:20px">@Ui.Icon("lock") Bu belge Tamamlandı statüsündedir; artık güncellenemez veya silinemez. Değişiklik için yöneticiye başvurun.</div>
+}
+@if (!string.IsNullOrEmpty(app.AdminNote))
+{
+    <div class="alert info" style="margin-bottom:20px">@Ui.Icon("info")<div><strong>Yönetici notu:</strong> @app.AdminNote</div></div>
+}
+
+<div class="split">
+    <div id="rapor">
+        <h2 style="margin-bottom:14px">Kontrol raporu</h2>
+        @if (app.CurrentDocument != null)
+        {
+            <partial name="_Report" model="app.CurrentDocument" />
+        }
+        else
+        {
+            <div class="card"><div class="empty">@Ui.Icon("upload")<h3>Evrak bekleniyor</h3><p>Başvuru bilgileriniz kaydedildi. Ek-16 belgenizi sağdaki alandan yükleyin.</p></div></div>
+        }
+    </div>
+
+    <div class="stack">
+        @if (Model.CanModify)
+        {
+            <div class="card">
+                <div class="card-head"><div><h3>Evrak Yükle</h3><p>Yükleme sırasında uygulanan kontroller</p></div></div>
+                <div class="card-body">
+                    <partial name="_Upload" model='new UploadVm { Controller = "Student", Action = "Upload", ApplicationId = app.Id, HasDocument = app.CurrentDocument != null }' />
+                </div>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-head"><h3>Yüklenen sürümler</h3><span class="tag">@app.Documents.Count</span></div>
+            <partial name="_Versions" model="app" />
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3>Staj günleri</h3></div>
+            <div class="card-body">
+                <div class="day-picker">
+                    @foreach (var d in app.StajGunleri)
+                    {
+                        <label><input type="checkbox" checked disabled><span>@Ek16Schema.WeekdayName(d)</span></label>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(app.GoogleFormUrl))
+                {
+                    <p class="small" style="margin:14px 0 0">@Ui.Icon("link") <a href="@app.GoogleFormUrl" target="_blank" rel="noopener">Google Form bağlantısı</a></p>
+                }
+            </div>
+        </div>
+
+        <partial name="_History" model="Model.History" />
+    </div>
+</div>
